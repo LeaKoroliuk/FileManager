@@ -142,6 +142,26 @@ public class UI extends JFrame {
 			}
 		});
 
+		// ADD NEW button
+		addBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!path.isEmpty()) {
+
+					CreateNewFolderJDialog newFolderJDialog = new CreateNewFolderJDialog(UI.this);
+
+					if (newFolderJDialog.getReady()) {
+						String nameOfNewFolder = newFolderJDialog.getNewName();
+						File newFolder = new File(path, nameOfNewFolder);
+						if (!newFolder.exists()) {
+							newFolder.mkdir();
+						}
+						updateList();
+					}
+				}
+			}
+		});
+		
 	}
 
 	private void updateList() {
