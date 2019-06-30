@@ -162,6 +162,24 @@ public class UI extends JFrame {
 			}
 		});
 		
+		// RENAME button
+		renameBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!path.isEmpty() & list.getSelectedValue() != null) {
+
+					RenameJDialog renameJDialog = new RenameJDialog(UI.this);
+
+					if (renameJDialog.getReady()) {
+						String selectedObj = list.getSelectedValue().toString();
+						String newNameOfFolder = renameJDialog.getNewName();
+						File renameFile = new File(path, selectedObj);
+						renameFile.renameTo(new File(path, newNameOfFolder));
+						updateList();
+					}
+				}
+			}
+		});
 	}
 
 	private void updateList() {
