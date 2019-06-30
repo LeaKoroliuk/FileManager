@@ -116,6 +116,31 @@ public class UI extends JFrame {
 				}
 			}
 		});
+		
+		// BACK button
+		backBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (path.length() > 3) {
+
+					path = path.substring(0, path.lastIndexOf("\\"));
+
+					String[] objects = new File(path).list();
+					DefaultListModel backRootModel = new DefaultListModel();
+
+					for (String s : objects) {
+						File checkObj = new File(s);
+						if (!checkObj.isHidden()) {
+							backRootModel.addElement(checkObj);
+						}
+					}
+					list.setModel(backRootModel);
+				} else {
+					list.setListData(discs);
+					path = "";
+				}
+			}
+		});
 
 	}
 
