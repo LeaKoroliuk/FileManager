@@ -216,6 +216,27 @@ public class UI extends JFrame {
 			}
 
 		});
+		
+		// DELETE button
+		delBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!path.isEmpty() & list.getSelectedValue() != null) {
+					String selectedObj = list.getSelectedValue().toString();
+					if (new File(path, selectedObj).list().length == 0) {
+						DeleteJDialog deleteJDialog = new DeleteJDialog(UI.this);
+						if (deleteJDialog.getReady()) {
+							File delFile = new File(path, selectedObj);
+							delFile.delete();
+						}
+						updateList();
+					} else {
+						JOptionPane.showMessageDialog(btnPanel, "Cannot delete non-empty folder!", "Warning",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
 
 	}
 
