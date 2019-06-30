@@ -1,0 +1,136 @@
+package com.koroliuk;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.File;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
+public class UI extends JFrame {
+
+	private JPanel catalogPanel = new JPanel();
+	private JPanel btnPanel = new JPanel();
+
+	private JButton backBtn = new JButton("BACK");
+	private JButton addBtn = new JButton("ADD NEW");
+	private JButton renameBtn = new JButton("RENAME");
+	private JButton moveBtn = new JButton("MOVE");
+	private JButton delBtn = new JButton("DELETE");
+
+	private JList list = new JList();
+	private JScrollPane scrollPane = new JScrollPane(list);
+
+	private String path = "";
+
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					UI frame = new UI();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	public UI() {
+		super("My File Manager");
+
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(700, 400);
+
+		btnPanel.add(backBtn);
+		btnPanel.add(addBtn);
+		btnPanel.add(renameBtn);
+		btnPanel.add(moveBtn);
+		btnPanel.add(delBtn);
+		btnPanel.setLayout(new GridLayout(5, 5, 25, 25));
+
+		catalogPanel.setLayout(new BorderLayout(5, 5));
+		catalogPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		catalogPanel.add(btnPanel, BorderLayout.WEST);
+		getContentPane().add(catalogPanel);
+
+		scrollPane.setPreferredSize(new Dimension(400, 500));
+		catalogPanel.add(scrollPane, BorderLayout.CENTER);
+
+		setResizable(true);
+		setLocationRelativeTo(null);
+
+		File[] discs = File.listRoots();
+		list.setListData(discs);
+		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
+		// LIST
+		list.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+
+					DefaultListModel model = new DefaultListModel();
+
+					if (!path.isEmpty()) {
+						path += "\\" + list.getSelectedValue().toString();
+					} else {
+						path += list.getSelectedValue().toString();
+					}
+
+					File selectedFile = new File(path);
+
+					if (selectedFile.isDirectory()) {
+						String[] rootArr = selectedFile.list();
+
+						for (String s : rootArr) {
+							File checkObj = new File(s);
+							if (!checkObj.isHidden()) {
+								model.addElement(checkObj);
+							}
+						}
+					}
+					list.setModel(model);
+				}
+			}
+		});
+
+	}
+
+	private void updateList() {
+		File updateDir = new File(path);
+		String[] updateMas = updateDir.list();
+		DefaultListModel updateModel = new DefaultListModel();
+
+		for (String str : updateMas) {
+			File check = new File(updateDir.getPath(), str);
+			if (!check.isHidden()) {
+				updateModel.addElement(str);
+			}
+		}
+		list.setModel(updateModel);
+	}
+
+}
