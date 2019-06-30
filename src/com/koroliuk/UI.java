@@ -180,6 +180,42 @@ public class UI extends JFrame {
 				}
 			}
 		});
+		
+		// MOVE button
+		moveBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!path.isEmpty() & list.getSelectedValue() != null) {
+					String selectedObj = list.getSelectedValue().toString();
+
+					if (new File(path, selectedObj).list().length == 0) {
+
+						MoveJDialog moveJDialog = new MoveJDialog(UI.this);
+
+						if (moveJDialog.getReady()) {
+							String newFolderPath = moveJDialog.getNewName();
+							if (!newFolderPath.isEmpty()) {
+								File createFile = new File(newFolderPath, selectedObj);
+								if (!createFile.exists()) {
+									createFile.mkdir();
+									File delFile = new File(path, selectedObj);
+									delFile.delete();
+									updateList();
+								} else {
+									JOptionPane.showMessageDialog(btnPanel,
+											"There is already such a folder along the specified path!", "Warning",
+											JOptionPane.ERROR_MESSAGE);
+								}
+							}
+						}
+					} else {
+						JOptionPane.showMessageDialog(btnPanel, "Cannot move non-empty folder!", "Warning",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+
+		});
 
 	}
 
