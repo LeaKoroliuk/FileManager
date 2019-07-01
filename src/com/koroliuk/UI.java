@@ -9,8 +9,20 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 public class UI extends JFrame {
@@ -27,7 +39,8 @@ public class UI extends JFrame {
 	private JList list = new JList();
 	private JScrollPane scrollPane = new JScrollPane(list);
 
-	private String path = "";
+	private Path path = Paths.get("");
+	private Path parent;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -93,89 +106,167 @@ public class UI extends JFrame {
 				if (e.getClickCount() == 2) {
 
 					DefaultListModel model = new DefaultListModel();
+					String selectedObj = list.getSelectedValue().toString();
 
-					if (!path.isEmpty()) {
-						path += "\\" + list.getSelectedValue().toString();
+					if (path == null) {
+						path = Paths.get(selectedObj);
 					} else {
-						path += list.getSelectedValue().toString();
+						path = Paths.get(path.toString(), selectedObj);
+						parent = path.getParent();
 					}
 
-					File selectedFile = new File(path);
-
-					if (selectedFile.isDirectory()) {
-						String[] rootArr = selectedFile.list();
-
-						for (String s : rootArr) {
-							File checkObj = new File(s);
-							if (!checkObj.isHidden()) {
-								model.addElement(checkObj);
+					if (Files.isDirectory(path)) {
+						try (DirectoryStream<Path> rootArr = Files.newDirectoryStream(Paths.get(path.toString()))) {
+							for (Path path1 : rootArr) {
+								if (!Files.isHidden(path1)) {
+									model.addElement(path1.getFileName());
+								}
 							}
+						} catch (IOException e1) {
+							e1.printStackTrace();
 						}
 					}
 					list.setModel(model);
 				}
 			}
 		});
-		
+
 		// BACK button
 		backBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (path.length() > 3) {
 
-					path = path.substring(0, path.lastIndexOf("\\"));
+				if (parent != null) {
+					path = parent;
+					parent = path.getParent();
 
-					String[] objects = new File(path).list();
 					DefaultListModel backRootModel = new DefaultListModel();
 
-					for (String s : objects) {
-						File checkObj = new File(s);
-						if (!checkObj.isHidden()) {
-							backRootModel.addElement(checkObj);
+					try (DirectoryStream<Path> rootArr = Files.newDirectoryStream(Paths.get(path.toString()))) {
+						for (Path path1 : rootArr) {
+							if (!Files.isHidden(path1)) {
+								backRootModel.addElement(path1.getFileName());
+							}
 						}
+					} catch (IOException e1) {
+						e1.printStackTrace();
 					}
 					list.setModel(backRootModel);
 				} else {
 					list.setListData(discs);
-					path = "";
+					path = Paths.get("");
 				}
 			}
 		});
-		
+
 		// ADD NEW button
 		addBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (!path.isEmpty()) {
+				if (!path.toString().isEmpty()) {
 
 					CreateNewFolderJDialog newFolderJDialog = new CreateNewFolderJDialog(UI.this);
 
 					if (newFolderJDialog.getReady()) {
-						String nameOfNewFolder = newFolderJDialog.getNewName();
-						File newFolder = new File(path, nameOfNewFolder);
-						if (!newFolder.exists()) {
-							newFolder.mkdir();
+						Path nameOfNewFolder = Paths.get(path.toString(), newFolderJDialog.getNewName());
+						if (!Files.exists(nameOfNewFolder)) {
+							try {
+								Files.createDirectory(nameOfNewFolder);
+							} catch (IOException e1) {
+								e1.printStackTrace();
+							}
 						}
 						updateList();
 					}
 				}
 			}
 		});
-		
+
 		// RENAME button
 		renameBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (!path.isEmpty() & list.getSelectedValue() != null) {
+				if (!path.toString().isEmpty() & list.getSelectedValue() != null) {
 
 					RenameJDialog renameJDialog = new RenameJDialog(UI.this);
 
 					if (renameJDialog.getReady()) {
 						String selectedObj = list.getSelectedValue().toString();
 						String newNameOfFolder = renameJDialog.getNewName();
-						File renameFile = new File(path, selectedObj);
-						renameFile.renameTo(new File(path, newNameOfFolder));
+						File renameFile = new File(path.toString(), selectedObj);
+						renameFile.renameTo(new File(path.toString(), newNameOfFolder));
+
 						updateList();
+
+					}
+				}
+			}
+		});
+
+		// MOVE button
+		moveBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!path.toString().isEmpty() & list.getSelectedValue() != null) {
+					String selectedObj = list.getSelectedValue().toString();
+
+					if (new File(path.toString(), selectedObj).list().length == 0) {
+
+						Path currentPathOfFile = Paths.get(path.toString(), selectedObj);
+						MoveJDialog moveJDialog = new MoveJDialog(UI.this);
+
+						if (moveJDialog.getReady()) {
+							String newFolderPath = moveJDialog.getNewName();
+
+							if (!newFolderPath.isEmpty()) {
+								Path newPath = Paths.get(newFolderPath, selectedObj);
+
+								if (Files.notExists(newPath)) {
+									try {
+										Files.move(currentPathOfFile, newPath);
+									} catch (IOException e1) {
+										e1.printStackTrace();
+									}
+									updateList();
+								} else {
+									JOptionPane.showMessageDialog(btnPanel,
+											"There is already such a folder along the specified path!", "Warning",
+											JOptionPane.ERROR_MESSAGE);
+								}
+							}
+						}
+					} else {
+						JOptionPane.showMessageDialog(btnPanel, "Cannot move non-empty folder!", "Warning",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+
+		});
+
+		// DELETE button
+		delBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!path.toString().isEmpty() & list.getSelectedValue() != null) {
+					String selectedObj = list.getSelectedValue().toString();
+
+					if (new File(path.toString(), selectedObj).list().length == 0) {
+						DeleteJDialog deleteJDialog = new DeleteJDialog(UI.this);
+
+						if (deleteJDialog.getReady()) {
+
+							Path newPath = Paths.get(path.toString(), selectedObj);
+							try {
+								Files.delete(newPath);
+							} catch (IOException e1) {
+								e1.printStackTrace();
+							}
+						}
+						updateList();
+					} else {
+						JOptionPane.showMessageDialog(btnPanel, "Cannot delete non-empty folder!", "Warning",
+								JOptionPane.ERROR_MESSAGE);
 					}
 				}
 			}
@@ -184,15 +275,15 @@ public class UI extends JFrame {
 	}
 
 	private void updateList() {
-		File updateDir = new File(path);
-		String[] updateMas = updateDir.list();
 		DefaultListModel updateModel = new DefaultListModel();
-
-		for (String str : updateMas) {
-			File check = new File(updateDir.getPath(), str);
-			if (!check.isHidden()) {
-				updateModel.addElement(str);
+		try (DirectoryStream<Path> rootArr = Files.newDirectoryStream(Paths.get(path.toString()))) {
+			for (Path path1 : rootArr) {
+				if (!Files.isHidden(path1)) {
+					updateModel.addElement(path1.getFileName());
+				}
 			}
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
 		list.setModel(updateModel);
 	}
