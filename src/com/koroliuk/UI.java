@@ -272,6 +272,44 @@ public class UI extends JFrame {
 			}
 		});
 
+		// ADD NEW button
+		addBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!path.isEmpty()) {
+
+					CreateNewFolderJDialog newFolderJDialog = new CreateNewFolderJDialog(UI.this);
+
+					if (newFolderJDialog.getReady()) {
+						String nameOfNewFolder = newFolderJDialog.getNewName();
+						File newFolder = new File(path, nameOfNewFolder);
+						if (!newFolder.exists()) {
+							newFolder.mkdir();
+						}
+						updateList();
+					}
+				}
+			}
+		});
+		
+		// RENAME button
+		renameBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!path.isEmpty() & list.getSelectedValue() != null) {
+
+					RenameJDialog renameJDialog = new RenameJDialog(UI.this);
+
+					if (renameJDialog.getReady()) {
+						String selectedObj = list.getSelectedValue().toString();
+						String newNameOfFolder = renameJDialog.getNewName();
+						File renameFile = new File(path, selectedObj);
+						renameFile.renameTo(new File(path, newNameOfFolder));
+						updateList();
+					}
+				}
+			}
+		});
 	}
 
 	private void updateList() {
