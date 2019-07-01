@@ -313,17 +313,19 @@ public class UI extends JFrame {
 	}
 
 	private void updateList() {
-		DefaultListModel updateModel = new DefaultListModel();
-		try (DirectoryStream<Path> rootArr = Files.newDirectoryStream(Paths.get(path.toString()))) {
-			for (Path path1 : rootArr) {
-				if (!Files.isHidden(path1)) {
-					updateModel.addElement(path1.getFileName());
-				}
-			}
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		list.setModel(updateModel);
+//		DefaultListModel updateModel = new DefaultListModel();
+//		try (DirectoryStream<Path> rootArr = Files.newDirectoryStream(Paths.get(path.toString()))) {
+//			for (Path path1 : rootArr) {
+//				if (!Files.isHidden(path1)) {
+//					updateModel.addElement(path1.getFileName());
+//				}
+//			}
+//		} catch (IOException e1) {
+//			e1.printStackTrace();
+//		}
+//		list.setModel(updateModel);
+		
+		System.out.println("!!!");
 	}
 
 }
